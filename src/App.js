@@ -11,11 +11,13 @@ function App() {
   );
 
   const onDragEndHandler = (result) => {
+    document.body.style.color = "inherit";
+    document.body.style.backgroundColor = "inherit";
+
     const { source, destination, draggableId, type } = result;
 
     const start = characters.columns[source.droppableId];
     const finish = characters.columns[destination.droppableId];
-   
 
     if (!destination) {
       return;
@@ -78,12 +80,29 @@ function App() {
     }
   };
 
+  const onDragStart = () => {
+    document.body.style.color = "#F99D2D";
+    document.body.style.transition = "background-Color 0.2s ease";
+  };
+
+  const onDragUpdate = (update) => {
+  
+    const { destination } = update;
+    const opacity = destination
+      ? destination.index / Object.keys(characters.task).length
+      : 0;
+    document.body.style.backgroundColor = `rgba(153,141,217,${opacity}`;
+  };
   return (
-    <DragDropContext onDragEnd={onDragEndHandler}>
+    <DragDropContext
+      onDragEnd={onDragEndHandler}
+      onDragStart={onDragStart}
+      onDragUpdate={onDragUpdate}
+    >
       <Droppable droppableId="all-columns" direction="horizontal" type="column">
-        {(provided) => (
+        {(provided,snapshot) => (
           <div
-            className="flex"
+            className={`flex ${snapshot.isDraggingOver?"bg-slate-700":"bg-white"}`}
             {...provided.droppableProps}
             ref={provided.innerRef}
           >
