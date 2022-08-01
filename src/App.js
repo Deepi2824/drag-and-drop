@@ -1,6 +1,6 @@
 // import logo from './logo.svg';
 import "./App.css";
-import { DragDropContext } from "react-beautiful-dnd";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import { useState } from "react";
 import { data } from "./Components/data";
 import { Column } from "./Components/Column";
@@ -11,16 +11,27 @@ function App() {
   );
 
   const onDragEndHandler = (result) => {
-    const { source, destination, draggableId } = result;
+    const { source, destination, draggableId, type } = result;
 
     const start = characters.columns[source.droppableId];
     const finish = characters.columns[destination.droppableId];
+   
 
     if (!destination) {
       return;
     }
 
-    if (start.id === finish.id) {
+    if (type === "column") {
+      const newColumnOrder = Array.from(characters.order);
+      newColumnOrder.splice(source.index, 1);
+      newColumnOrder.splice(destination.index, 0, draggableId);
+
+      const newState = {
+        ...characters,
+        order: newColumnOrder,
+      };
+      setCharacters(newState);
+    } else if (start.id === finish.id) {
       const newTask = Array.from(start.taskId);
       newTask.splice(source.index, 1);
       newTask.splice(destination.index, 0, draggableId);
@@ -69,19 +80,28 @@ function App() {
 
   return (
     <DragDropContext onDragEnd={onDragEndHandler}>
-      <div className="flex ">
-        {characters.order.map((x) => {
-          const data = characters.columns[x];
+      <Droppable droppableId="all-columns" direction="horizontal" type="column">
+        {(provided) => (
+          <div
+            className="flex"
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+          >
+            {characters.order.map((x, index) => {
+              const data = characters.columns[x];
 
-          const result = data.taskId.map((y) => characters.task[y]);
+              const result = data.taskId.map((y) => characters.task[y]);
 
-          return (
-            <div className="w-full" key={data.id}>
-              <Column column={data} task={result} />
-            </div>
-          );
-        })}
-      </div>
+              return (
+                <div className="w-full" key={data.id}>
+                  <Column column={data} task={result} index={index} />
+                </div>
+              );
+            })}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
     </DragDropContext>
   );
 }
